@@ -1,8 +1,11 @@
-#include "httpl.h"
+#include "httpl_wrapper.h"
 #include "httpl_network.h"
+#include "TaskQueue.h"
 
 #include <iostream>
 #include <unistd.h>
+
+TaskQueue *tasks;
 
 HTTPServer::HTTPServer(const std::string& addr, unsigned int port, http_version version)
     : version_used(version) {
@@ -15,6 +18,10 @@ HTTPServer::HTTPServer(const std::string& addr, unsigned int port, http_version 
         main_sockfd = bind_to_socket(ip.c_str(), port, TCP);
     } else
         throw std::exception();
+
+    if(!tasks){
+        tasks = new TaskQueue;
+    }
 }
 
 int HTTPServer::serve(int forever) {

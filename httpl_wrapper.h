@@ -1,5 +1,5 @@
-#ifndef HTTP_HTTPL_H
-#define HTTP_HTTPL_H
+#ifndef HTTP_HTTPL_WRAPPER_H
+#define HTTP_HTTPL_WRAPPER_H
 
 #include <iostream>
 #include "content_provider.h"
@@ -29,4 +29,4 @@ protected:
     int launch_HTTPS_connection(const int& fd);
 };
 
-#endif //HTTP_HTTPL_H
+#endif //HTTP_HTTPL_WRAPPER_H

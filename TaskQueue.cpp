@@ -4,8 +4,7 @@
 
 #include "TaskQueue.h"
 
-template <typename function_type>
-TaskQueue<function_type>::TaskQueue(int nThreads) {
+TaskQueue::TaskQueue(int nThreads) {
     unsigned int nthreads = thread::hardware_concurrency();
 
     total_threads = nThreads == 0 ? nthreads : nThreads;
@@ -15,24 +14,22 @@ TaskQueue<function_type>::TaskQueue(int nThreads) {
     threads.resize(nthreads);
 
     for(int t = 0; t < total_threads; ++t){
-        threads.at(t) = thread(thread_loop());
+        threads.at(t) = thread(&TaskQueue::thread_loop, this);
     }
 }
 
-template <typename function_type>
-void TaskQueue<function_type>::add_to_task_queue(function<function_type>& task){
+void TaskQueue::add_to_task_queue(function_type& task){
     task_queue.push(task);
     condition.notify_one();
 }
 
-template <typename function_type>
-void TaskQueue<function_type>::thread_loop() {
+void TaskQueue::thread_loop() {
     while(true) {
-        function<function_type> task;
+        function_type task;
         {
             std::unique_lock<mutex> lock(queue_lock);
             condition.wait(lock, [=] {
-                !task_queue.empty() || terminate;
+                return !task_queue.empty() || terminate;
             });
             if (terminate)
                 return;
@@ -43,4 +40,13 @@ void TaskQueue<function_type>::thread_loop() {
         task();
         available_threads += 1;
     }
+}
+
+TaskQueue::~TaskQueue() {
+    terminate = true;
+    condition.notify_all();
+    for(auto&& t:threads){
+        t.join();
+    }
+    threads.clear();
 }

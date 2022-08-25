@@ -4,7 +4,7 @@
 #ifndef HTTP_CONTENT_PROVIDER_H
 #define HTTP_CONTENT_PROVIDER_H
 
-#include "httpl.h"
+#include "httpl_wrapper.h"
 
 using std::string;
 

@@ -10,12 +10,14 @@
 #include <vector>
 #include <thread>
 #include <queue>
+#include <atomic>
 
 using std::mutex;
 using std::thread;
 using std::function;
 using std::vector;
 using std::queue;
+using function_type = std::function<void()>;
 
 struct locked_int{
     int n;
@@ -69,21 +71,19 @@ struct locked_queue : queue<T>{
     }
 };
 
-template<typename function_type>
 class TaskQueue {
 public:
     explicit TaskQueue(int nThreads=0);
-    void add_to_task_queue(function<function_type>& task);
+    void add_to_task_queue(function_type& task);
+    ~TaskQueue();
 
 protected:
     unsigned int total_threads;
-    locked_int available_threads;
     vector<thread> threads;
-    // locked_queue<function_type> task_queue;
+    std::atomic_uint16_t available_threads{};
     queue<function_type> task_queue;
     mutex queue_lock;
     std::condition_variable condition;
-
     int terminate=0;
 
     void thread_loop();
