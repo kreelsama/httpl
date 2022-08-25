@@ -4,8 +4,8 @@
 #ifndef HTTP_CONTENT_PROVIDER_H
 #define HTTP_CONTENT_PROVIDER_H
 
-#include "httpl_wrapper.h"
-
+// #include "httpl_wrapper.h"
+#include <string>
 using std::string;
 
 typedef struct mapping {
@@ -22,6 +22,8 @@ public:
 
     void add_static_map(const string& uri,const string& dir);
     int set_web_base(const string& dir);
+
+    int retrieve_IO(const string& uri);
 
     ~Content_Provider();
 protected:

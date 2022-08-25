@@ -80,6 +80,7 @@ Content_Provider::Content_Provider(const string& uri, const string& dir) {
 
 int Content_Provider::set_web_base(const string &dir) {
     add_static_map("/", dir);
+    return 0;
 }
 
 Content_Provider::~Content_Provider() {

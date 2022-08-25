@@ -46,5 +46,5 @@ int HTTPServer::add_static_map(const std::string& uri, const std::string& dir) {
 }
 
 int HTTPServer::launch_HTTP_connection(const int &fd) {
-
+    return 0;
 }

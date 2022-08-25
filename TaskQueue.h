@@ -11,6 +11,7 @@
 #include <thread>
 #include <queue>
 #include <atomic>
+#include <condition_variable>
 
 using std::mutex;
 using std::thread;

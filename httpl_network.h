@@ -9,11 +9,27 @@
 enum PROTOCOL{
     TCP,
     UDP,
-    TCP_UDP
+    FILE_IO,
+    HTTP,
+    HTTPS
+};
+
+struct addr_prefixes{
+    const char* proto_prefix;
+    int type;
+};
+
+struct httpl_addrinfo{
+    int domain;
+    int type;
+    char* addr;
+    unsigned int addrlen;
+    int port;
 };
 
 
 int bind_to_socket(const char *addr, unsigned int port, PROTOCOL proto);
 int accept_one(const int& fd);
+httpl_addrinfo* get_addr_info(const char* addr);
 
 #endif //HTTP_HTTPL_NETWORK_H

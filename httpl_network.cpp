@@ -4,18 +4,27 @@
 #include "httpl_network.h"
 #include "httpl_err.h"
 
-#include <linux/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <cstdlib>
 #include <unistd.h>
 #include <netinet/tcp.h>
+#include <cctype>
+#include <cstdlib>
 
 #define UNIX_PATH_MAX 108
+
+
+const addr_prefixes prefixes[] = {
+        {"tcp://", TCP},
+        {"udp://", UDP},
+        {"file://", FILE_IO},
+        {"http://", HTTP},
+        {"https://", HTTPS},
+};
+
 
 int tell_address(const char* addr){
     struct addrinfo info{}, *res;
@@ -35,6 +44,7 @@ int tell_address(const char* addr){
 
     return type;
 }
+
 
 int bind_to_socket(const char *addr, unsigned int port, PROTOCOL proto){
     int sockfd;
@@ -102,4 +112,84 @@ int accept_one(const int& sockfd){
         ERR_WITH_ERRNO("accept error");
     }
     return fd;
+}
+
+// Assume to be: file://<location>/filename.ext
+// tcp://ip:port OR tcp://<unix socket location>
+// udp://ip:port OR udp://<unix socket location>
+// http://ip:port or https://ip:port
+httpl_addrinfo* get_addr_info(const char* addr){
+    size_t len = strlen(addr);
+    const char *s = addr;
+    auto *addrinfo = new httpl_addrinfo{.port=-1};
+    if(len <= 6){
+        addrinfo->type = -1; // invalid address
+        return addrinfo;
+    }
+
+    for(auto&& prefix : prefixes){
+        if(!strncmp(addr, prefix.proto_prefix, strlen(prefix.proto_prefix))){
+            addrinfo->type = prefix.type;
+            s += strlen(prefix.proto_prefix);
+            break;
+        }
+    }
+
+    if (*s == '[' && addrinfo->type != FILE_IO){ // ipv6 start indicator
+        for(len = 0; *(s+len)!=']'; ++len); // find end of ipv6 address
+        addrinfo->domain = AF_INET6;
+        addrinfo->addrlen = len-2;
+        addrinfo->addr = new char[len-1];
+        strncpy(addrinfo->addr, s+1, len-2);
+        s += len;
+    }
+    else if (strstr(s, ":") && addrinfo->type != FILE_IO){ //existence of ":" while it's not IPv6, it is then must be IPv4
+        for(len = 0; *(s+len)!=':'; ++len);
+        addrinfo->domain = AF_INET;
+        addrinfo->addrlen = len - 1;
+        addrinfo->addr = new char[len];
+        strncpy(addrinfo->addr, s, len-1);
+        s += len;
+    } else if (addrinfo->type == TCP || addrinfo->type == UDP){ // Unix socket without a port
+        addrinfo->domain = AF_UNIX;
+        for(len = 0; *s; ++len);
+        addrinfo->addrlen = len;
+        addrinfo->addr = new char[len+1];
+        strncpy(addrinfo->addr, s, len+1);
+        s += len;
+    } else if (addrinfo->type == FILE_IO){ // Local file
+        addrinfo->domain = AF_FILE;
+        addrinfo->addrlen = len;
+        addrinfo->addr = new char[len+1];
+        strncpy(addrinfo->addr, s, len+1);
+        s += len;
+    } else{ // http or https
+        addrinfo->domain = AF_UNSPEC; // we don't support http proxy yet
+        goto invalid;
+    }
+
+    if (addrinfo->domain != AF_UNSPEC and addrinfo->domain != AF_UNIX){ // decide port
+        char *endptr;
+        if (*s != ':'){
+            goto invalid;
+        }
+        if(tell_address(addrinfo->addr) != addrinfo->domain){
+            goto invalid; //invalid ipv4 or ipv6 address
+        }
+        addrinfo->port = strtol(s+1, &endptr, 10);
+        if(endptr == s+1){
+            goto invalid;
+        }
+
+    }
+
+    return addrinfo;
+invalid:
+    addrinfo->type = -1;
+    return addrinfo;
+}
+
+void free_addrinfo(httpl_addrinfo *addrinfo){
+    delete[] addrinfo->addr;
+    delete addrinfo;
 }
