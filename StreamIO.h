@@ -21,9 +21,10 @@ class StreamIO {
     std::string read(int n=-1);
     virtual int write(const std::string& buf)=0;
 
+    // To determine whether the requested resource is usable
     bool is_valid();
-    bool is_empty();
-    int close();
+    bool eof();
+    int fileseek(long offset);
 
     ~StreamIO();
 

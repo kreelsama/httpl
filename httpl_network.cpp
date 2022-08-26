@@ -13,9 +13,11 @@
 #include <netinet/tcp.h>
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <fcntl.h>
 
 #define UNIX_PATH_MAX 108
-
 
 const addr_prefixes prefixes[] = {
         {"tcp://", TCP},
@@ -45,7 +47,6 @@ int tell_address(const char* addr){
     return type;
 }
 
-
 int bind_to_socket(const char *addr, unsigned int port, PROTOCOL proto){
     int sockfd;
     int domain_type = tell_address(addr);
@@ -67,26 +68,30 @@ int bind_to_socket(const char *addr, unsigned int port, PROTOCOL proto){
                reinterpret_cast<void *>(&yes),sizeof(yes));
     if(domain_type == AF_INET){
         struct sockaddr_in sock_addr{};
+        len = sizeof(sock_addr);
         inet_pton(AF_INET, addr, &sock_addr.sin_addr.s_addr);
         sock_addr.sin_addr.s_addr = INADDR_ANY;
         sock_addr.sin_family = AF_INET;
         sock_addr.sin_port = htons(port);
         ret = bind(sockfd, (struct sockaddr*) &sock_addr, len);
-
+        setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
+                   reinterpret_cast<char *>(&yes),sizeof(yes));
     }
     else if(domain_type == AF_INET6){
         struct sockaddr_in6 sock_addr{};
+        len = sizeof(sock_addr);
         inet_pton(AF_INET6, addr, &sock_addr.sin6_addr);
         sock_addr.sin6_family = AF_INET6;
         sock_addr.sin6_port = htons(port);
         ret = bind(sockfd, (struct sockaddr*) &sock_addr, len);
         setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY,
                    reinterpret_cast<char *>(&yes),sizeof(yes));
-    }else { // domain_type == AF_UNIX
+    }
+    else { // domain_type == AF_UNIX
         struct sockaddr_un sock_addr{};
+        len = sizeof(sock_addr);
         sock_addr.sun_family = AF_UNIX;
         strcpy(sock_addr.sun_path, addr);
-        len = sizeof(sock_addr);
         unlink(addr);
         ret = bind(sockfd, (struct sockaddr*) &sock_addr, len);
         setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY,
@@ -118,13 +123,12 @@ int accept_one(const int& sockfd){
 // tcp://ip:port OR tcp://<unix socket location>
 // udp://ip:port OR udp://<unix socket location>
 // http://ip:port or https://ip:port
-httpl_addrinfo* get_addr_info(const char* addr){
+httpl_addrinfo* get_addr_info(const char* addr) {
     size_t len = strlen(addr);
     const char *s = addr;
     auto *addrinfo = new httpl_addrinfo{.port=-1};
     if(len <= 6){
-        addrinfo->type = -1; // invalid address
-        return addrinfo;
+        goto invalid;
     }
 
     for(auto&& prefix : prefixes){
@@ -185,7 +189,7 @@ httpl_addrinfo* get_addr_info(const char* addr){
 
     return addrinfo;
 invalid:
-    addrinfo->type = -1;
+    addrinfo->type = AF_TYPE_INVALID;
     return addrinfo;
 }
 
@@ -193,3 +197,4 @@ void free_addrinfo(httpl_addrinfo *addrinfo){
     delete[] addrinfo->addr;
     delete addrinfo;
 }
+

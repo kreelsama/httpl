@@ -11,8 +11,14 @@ enum PROTOCOL{
     UDP,
     FILE_IO,
     HTTP,
-    HTTPS
+    HTTPS,
 };
+
+#ifndef AF_FILE
+#define AF_FILE 0x1022 // magic number
+#endif
+
+#define AF_TYPE_INVALID (-1)
 
 struct addr_prefixes{
     const char* proto_prefix;
