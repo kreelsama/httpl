@@ -31,6 +31,7 @@ class StreamIO {
 protected:
     int io_fd;
     bool valid;
+    int errcode;
     StreamType iotype=INVALID_IO;
 };
 

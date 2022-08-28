@@ -101,7 +101,6 @@ std::string StreamIO::read(int n){
 
 int StreamIO::fileseek(long offset) {
     if(valid && iotype == FILE_IO){
-        lseek(io_fd, offset, SEEK_SET);
+        return lseek(io_fd, offset, SEEK_SET);
     }
-    return 0;
 }

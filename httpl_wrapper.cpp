@@ -1,6 +1,7 @@
 #include "httpl_wrapper.h"
 #include "httpl_network.h"
 #include "TaskQueue.h"
+#include "HTTPConnection.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -25,10 +26,16 @@ HTTPServer::HTTPServer(const std::string& addr, unsigned int port, http_version 
 }
 
 int HTTPServer::serve(int forever) {
-
+    int client_fd;
     do {
-        int clientfd = accept_one(main_sockfd);
+        if(ssl_enabled)
+            client_fd = accept_one(main_sockfd);
 
+        if(client_fd <= 0)
+            continue;
+
+        if(ssl_enabled)
+            launch_HTTP_connection(client_fd);
     }while(forever);
     return 1;
 }
@@ -45,6 +52,8 @@ int HTTPServer::add_static_map(const std::string& uri, const std::string& dir) {
     return 0;
 }
 
-int HTTPServer::launch_HTTP_connection(const int &fd) {
+int HTTPServer::launch_HTTP_connection(const int fd) {
+    auto func = [fd, this] { return handle_http_connection(fd, content_provider);};
+    tasks->add_to_task_queue(reinterpret_cast<function_type &>(func));
     return 0;
 }

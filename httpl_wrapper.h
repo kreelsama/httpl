@@ -3,13 +3,8 @@
 
 #include <iostream>
 #include "content_provider.h"
+#include "httpl_common.h"
 
-enum http_version {
-    HTTP_1_1,
-    HTTP_2,
-    HTTP_3,
-    HTTP_HYBRID
-};
 
 class HTTPServer {
 public:
@@ -26,8 +21,8 @@ protected:
 
     Content_Provider content_provider;
 
-    int launch_HTTP_connection(const int& fd);
-    int launch_HTTPS_connection(const int& fd);
+    int launch_HTTP_connection(const int fd);
+    int launch_HTTPS_connection(const int fd);
 };
 
 #endif //HTTP_HTTPL_WRAPPER_H
