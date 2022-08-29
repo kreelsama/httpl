@@ -16,7 +16,8 @@ enum HTTPMethods{
     GET,
     POST,
     HEAD,
-    OTHERS // unimplemented
+    OTHERS, // unimplemented
+    UNSET
 }; // only these three supported
 
 std::unordered_map<int, string> status_desc = {
@@ -60,7 +61,7 @@ class HTTPHeader {
     // support header["attr"] = "val";
     string& operator[](const string& attr);
     HTTPHeader& operator+(const header_t& to_append);
-    HTTPHeader& operator+=(const header_t& to_append);
+    void operator+=(const header_t& to_append);
 
     string serialize();
     void set_status_code(int code);
@@ -76,6 +77,7 @@ private:
     HTTPMethods method;
     string version_served;
     string status_string;
+    string method_string;
     string uri; // for requested resource
 };
 #endif //HTTP_HTTPCONTENT_H
