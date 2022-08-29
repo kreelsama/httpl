@@ -67,9 +67,10 @@ class HTTPHeader {
     void set_status_code(int code);
     void set_http_version(http_version version);
     void set_http_version(const string& version);
-    HTTPMethods get_http_method(const string& meth);
+    static HTTPMethods get_http_method(const string& meth);
     void set_http_method(HTTPMethods meth);
     HTTPMethods get_http_method();
+    void set_request_uri(const string& ruri);
 
 private:
     enum {ClientReq, ServerResp} request_type;

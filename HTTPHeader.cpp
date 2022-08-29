@@ -111,7 +111,6 @@ void HTTPHeader::set_http_version(const string& version) {
         version_served = "HTTP/1.1";
 }
 
-
 void HTTPHeader::set_status_code(int code) {
     if(status_desc.find(code) == status_desc.end()){
         ERR_WITH_ERRNO("Unexpected status code")
@@ -191,4 +190,8 @@ string HTTPHeader::serialize() {
 
     return http_header;
 
+}
+
+void HTTPHeader::set_request_uri(const string &req_uri) {
+    uri = req_uri;
 }
