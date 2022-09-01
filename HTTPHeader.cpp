@@ -45,6 +45,7 @@ HTTPHeader::HTTPHeader(const std::string &header_string) {
     line = lines[0];
     // TODO: space_pos points to the end
     if(line.find("HTTP/") == 0){ // A server response without HTTP Method and URI
+        request_type = ServerResp;
         set_http_version(line);
         space_pos = line.find(' ');
         line = line.substr(space_pos + 1);
@@ -53,6 +54,7 @@ HTTPHeader::HTTPHeader(const std::string &header_string) {
         code = strtol(line.c_str(), nullptr, 10);
         set_status_code(code);
     } else { // Client request with HTTP Method and requested URI
+        request_type = ClientReq;
         set_http_method(get_http_method(line));
         space_pos = line.find(' ');
         line = line.substr(space_pos + 1);
@@ -194,4 +196,100 @@ string HTTPHeader::serialize() {
 
 void HTTPHeader::set_request_uri(const string &req_uri) {
     uri = req_uri;
+}
+
+string HTTPHeader::get_request_uri() {
+    return uri;
+}
+
+void HTTPHeader::set_GET_param(const std::string &name, const std::string &value) {
+    GET_param[name] = value;
+}
+
+void HTTPHeader::update_GET_param_from_URI() {
+    if(method != GET)
+        return;
+
+    int pos = 0;
+    bool escaped = false;
+
+    for(pos = 0; pos < uri.length(); ++pos){
+        if(uri.at(pos) == '?' and not escaped){
+            break;
+        }
+        if(uri.at(pos) == '\\'){
+            if(escaped){
+                escaped = false;
+            } else escaped = true;
+        }
+    }
+    if(pos == uri.length()) // last char is ?
+        GET_param.clear();
+
+    string param = uri.substr(pos + 1);
+    bool find_key = true;
+    escaped = false;
+    string key, value;
+
+    auto append = [&](char c){
+        if (find_key) {
+            key += c;
+        } else value += c;
+    };
+
+    for(pos = 0;pos < param.length(); pos ++){
+        if(param.at(pos) == '&' and not escaped){
+            find_key = true;
+            if(not key.empty()){
+                GET_param[key] = value;
+            }
+            key.clear();
+            value.clear();
+        }
+        else if(param.at(pos) == '\\'){
+            if(escaped){
+                escaped = false;
+                append('\\');
+            } else escaped = true;
+        }
+        else if(param.at(pos) == '='){ // to find value
+            if(escaped){
+                escaped = false;
+                append('=');
+            } else find_key = false;
+        }
+        else {
+            append(param.at(pos));
+        }
+    }
+
+}
+
+
+string HTTPHeader::GET_param2string() {
+    string GET_string("?");
+
+    auto append_string = [](string& to_append, const string escaped_string){
+        const char* special_character= R"(\?=&)";
+        int l = strlen(special_character);
+        for(auto&& c:escaped_string){
+            for(auto i = 0; i < l; ++i){
+                if(special_character[i] == c){
+                    to_append += '\\';
+                    break;
+                }
+            }
+            to_append += c;
+        }
+    };
+
+    for(const auto & it : GET_param){
+        auto attr = it.first;
+        auto value = it.second;
+        append_string(GET_string, attr);
+        GET_string += '=';
+        append_string(GET_string, value);
+    }
+
+    return GET_string;
 }

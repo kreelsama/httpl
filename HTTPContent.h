@@ -71,8 +71,12 @@ class HTTPHeader {
     void set_http_method(HTTPMethods meth);
     HTTPMethods get_http_method();
     void set_request_uri(const string& ruri);
+    string get_request_uri();
+    void set_GET_param(const string& name, const string& value);
 
 private:
+    void update_GET_param_from_URI();
+    string GET_param2string();
     enum {ClientReq, ServerResp} request_type;
     header_t header;
     HTTPMethods method;
@@ -80,5 +84,6 @@ private:
     string status_string;
     string method_string;
     string uri; // for requested resource
+    header_t GET_param;
 };
 #endif //HTTP_HTTPCONTENT_H

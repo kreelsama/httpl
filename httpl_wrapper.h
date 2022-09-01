@@ -12,7 +12,7 @@ public:
     int add_static_map(const std::string& uri, const std::string& dir);
 
     int serve(int forever=true);
-    int enable_ssl(const std::string& priv_certpath, const std::string& public_certpath);
+    int enable_ssl(const std::string& priv_cert, const std::string& public_cert);
     virtual ~HTTPServer() = 0;
 protected:
     http_version version_used;
