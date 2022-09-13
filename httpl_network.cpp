@@ -119,7 +119,7 @@ int accept_one(const int& sockfd){
     return fd;
 }
 
-// Assume to be: file://<location>/filename.ext
+// Assume to be: file://<location>/filename.txt
 // tcp://ip:port OR tcp://<unix socket location>
 // udp://ip:port OR udp://<unix socket location>
 // http://ip:port or https://ip:port
