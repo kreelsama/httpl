@@ -3,3 +3,12 @@
 //
 
 #include "HTTPContent.h"
+
+enum compression_type{
+    GZIP,
+    DEFLATE
+};
+
+HTTPRequest::HTTPRequest(string req_body) {
+
+}

@@ -5,6 +5,7 @@
 #include "httpl_err.h"
 
 #include <vector>
+#include <ctime>
 using std::vector;
 
 static vector<string> split(const string& raw, const char* delimiter){
@@ -26,6 +27,14 @@ static vector<string> split(const string& raw, const char* delimiter){
         prev_pos = pos + step_size;
     }
     return lines;
+}
+
+static string get_UTC_time(){
+    time_t t = time(nullptr);
+    string res = asctime(localtime(&t));
+    res.pop_back(); // remove trailing '\n'
+    res += " GMT";
+    return res;
 }
 
 HTTPHeader::HTTPHeader(const header_t& init_header){
@@ -87,7 +96,7 @@ void HTTPHeader::update(const header_t &to_append) {
     for(const auto & it : to_append){
         auto attr = it.first;
         auto value = it.second;
-        header[attr] = value;
+        update(attr, value);
     }
 }
 
@@ -161,8 +170,10 @@ void HTTPHeader::operator+=(const header_t &to_append) {
     update(to_append);
 }
 
+// Only a Request Header need to be serialized
 string HTTPHeader::serialize() {
     string http_header;
+    set_date();
     if(method == UNSET){ // A response header
         http_header += version_served;
         http_header += " ";
@@ -223,7 +234,7 @@ void HTTPHeader::update_GET_param_from_URI() {
             } else escaped = true;
         }
     }
-    if(pos == uri.length()) // last char is ?
+    if(pos == uri.length()) // last char is '?'
         GET_param.clear();
 
     string param = uri.substr(pos + 1);
@@ -265,16 +276,15 @@ void HTTPHeader::update_GET_param_from_URI() {
 
 }
 
-
 string HTTPHeader::GET_param2string() {
     string GET_string("?");
 
-    auto append_string = [](string& to_append, const string escaped_string){
-        const char* special_character= R"(\?=&)";
-        int l = strlen(special_character);
+    auto append_string = [](string& to_append, const string& escaped_string){
+        const string special_characters= R"(\?=&: )";
+        auto l = special_characters.length();
         for(auto&& c:escaped_string){
             for(auto i = 0; i < l; ++i){
-                if(special_character[i] == c){
+                if(special_characters[i] == c){
                     to_append += '\\';
                     break;
                 }
@@ -289,7 +299,20 @@ string HTTPHeader::GET_param2string() {
         append_string(GET_string, attr);
         GET_string += '=';
         append_string(GET_string, value);
+        GET_string += '&';
     }
 
+    GET_string.pop_back(); // remove trailing '&'
+    // If the string is empty of parameters, the pop_back should pop '?'
     return GET_string;
+}
+
+void HTTPHeader::set_date() {
+    if(header["Date"].empty()){
+        update("Date", get_UTC_time());
+    }
+}
+
+HTTPHeader::HTTPHeader() {
+    set_date();
 }

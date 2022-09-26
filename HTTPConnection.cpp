@@ -6,10 +6,10 @@
 #include "StreamIO.h"
 #include "HTTPContent.h"
 
-class HTTPConnection {
+class ServerHTTPConnection {
 public:
-    HTTPConnection(int conn, const Content_Provider& cp);
-    ~HTTPConnection();
+    ServerHTTPConnection(int conn, const Content_Provider& cp);
+    ~ServerHTTPConnection();
 
     void start();
 
@@ -22,11 +22,15 @@ private:
 
 
 void handle_http_connection(int io, const Content_Provider& provider){
-    HTTPConnection connection(io, provider);
+    ServerHTTPConnection connection(io, provider);
     connection.start();
 }
 
-HTTPConnection::HTTPConnection(int conn, const Content_Provider& cp){
+ServerHTTPConnection::ServerHTTPConnection(int conn, const Content_Provider& cp){
     fd = conn;
     provider = cp;
+}
+
+string ServerHTTPConnection::receive_or_die() {
+    return std::string();
 }

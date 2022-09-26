@@ -42,16 +42,7 @@ std::unordered_map<int, string> status_desc = {
         {503, "Service Unavailable"}, {504, "Gateway Timeout"},{505, "HTTP Version Not Supported"}
 };
 
-class HTTPRequest {
-    HTTPRequest(string req_body);
-};
-
-class HTTPResponse {
-    HTTPResponse();
-};
-
 class HTTPHeader {
-    HTTPHeader();
     explicit HTTPHeader(const header_t& init_header);
     explicit HTTPHeader(const string& header_string);
 
@@ -73,6 +64,10 @@ class HTTPHeader {
     void set_request_uri(const string& ruri);
     string get_request_uri();
     void set_GET_param(const string& name, const string& value);
+    void set_date();
+
+public:
+    HTTPHeader();
 
 private:
     void update_GET_param_from_URI();
@@ -86,4 +81,23 @@ private:
     string uri; // for requested resource
     header_t GET_param;
 };
+
+class HTTPRequest {
+    HTTPRequest();
+    HTTPRequest(string req_body);
+    void set_request_method(HTTPMethods meth);
+    HTTPMethods get_request_method();
+
+    ~HTTPRequest();
+private:
+    HTTPHeader header;
+    header_t request_params;
+    HTTPMethods method;
+};
+
+class HTTPResponse {
+    HTTPResponse();
+};
+
+
 #endif //HTTP_HTTPCONTENT_H
