@@ -44,7 +44,6 @@ HTTPServer::~HTTPServer() {
     if (main_sockfd > 0){
         close(main_sockfd);
     }
-
 }
 
 int HTTPServer::add_static_map(const std::string& uri, const std::string& dir) {

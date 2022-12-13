@@ -52,8 +52,9 @@ HTTPHeader::HTTPHeader(const std::string &header_string) {
     vector<string> lines = split(header_string, CRLF);
 
     line = lines[0];
+    space_pos = line.find("HTTP");
     // TODO: space_pos points to the end
-    if(line.find("HTTP/") == 0){ // A server response without HTTP Method and URI
+    if(space_pos == 0){ // A server response without HTTP Method and URI
         request_type = ServerResp;
         set_http_version(line);
         space_pos = line.find(' ');
@@ -62,7 +63,7 @@ HTTPHeader::HTTPHeader(const std::string &header_string) {
         int code;
         code = strtol(line.c_str(), nullptr, 10);
         set_status_code(code);
-    } else { // Client request with HTTP Method and requested URI
+    } else if(space_pos != string::npos) { // Client request with HTTP Method and requested URI
         request_type = ClientReq;
         set_http_method(get_http_method(line));
         space_pos = line.find(' ');
@@ -71,6 +72,9 @@ HTTPHeader::HTTPHeader(const std::string &header_string) {
         uri = line.substr(0,space_pos);
         line = line.substr(space_pos+1);
         set_http_version(line);
+    } else{ // Invalid Header
+        request_type = Invalid;
+        return;
     }
 
     if(lines.size() == 1) // Header only contains a single line
@@ -205,11 +209,11 @@ string HTTPHeader::serialize() {
 
 }
 
-void HTTPHeader::set_request_uri(const string &req_uri) {
+void HTTPHeader::set_uri(const string &req_uri) {
     uri = req_uri;
 }
 
-string HTTPHeader::get_request_uri() {
+string HTTPHeader::get_uri() {
     return uri;
 }
 
@@ -315,4 +319,8 @@ void HTTPHeader::set_date() {
 
 HTTPHeader::HTTPHeader() {
     set_date();
+}
+
+bool HTTPHeader::is_valid() {
+    return request_type == Invalid;
 }

@@ -11,19 +11,32 @@ public:
     ServerHTTPConnection(int conn, const Content_Provider& cp);
     ~ServerHTTPConnection();
 
-    void start();
+    void serve();
 
 private:
     string receive_or_die();
+    HTTPRequest receive_request();
     string send_response();
     int fd;
+    int time_out = 10;
     Content_Provider provider;
 };
 
-
 void handle_http_connection(int io, const Content_Provider& provider){
     ServerHTTPConnection connection(io, provider);
-    connection.start();
+    connection.serve();
+}
+
+void ServerHTTPConnection::serve() {
+
+}
+
+ServerHTTPConnection::~ServerHTTPConnection() {
+
+}
+
+HTTPRequest ServerHTTPConnection::receive_request() {
+
 }
 
 ServerHTTPConnection::ServerHTTPConnection(int conn, const Content_Provider& cp){

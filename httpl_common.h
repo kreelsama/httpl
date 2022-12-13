@@ -8,6 +8,7 @@
 #define SERVER_DESC "httpl_static_server/0.0.1"
 
 #define CRLF "\r\n"
+#define DELIMITER CRLF CRLF
 
 enum http_version {
     HTTP_1_1,

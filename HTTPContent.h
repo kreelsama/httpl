@@ -20,7 +20,7 @@ enum HTTPMethods{
     UNSET
 }; // only these three supported
 
-std::unordered_map<int, string> status_desc = {
+static const std::unordered_map<int, string> status_desc = {
         {100, "Continue"}, {103, "Early Hints"},
 
         {200, "OK"}, {201, "Created"}, {202, "Accepted"},
@@ -43,6 +43,8 @@ std::unordered_map<int, string> status_desc = {
 };
 
 class HTTPHeader {
+public:
+    HTTPHeader();
     explicit HTTPHeader(const header_t& init_header);
     explicit HTTPHeader(const string& header_string);
 
@@ -61,25 +63,25 @@ class HTTPHeader {
     static HTTPMethods get_http_method(const string& meth);
     void set_http_method(HTTPMethods meth);
     HTTPMethods get_http_method();
-    void set_request_uri(const string& ruri);
-    string get_request_uri();
+    void set_uri(const string& ruri);
+    string get_uri();
     void set_GET_param(const string& name, const string& value);
     void set_date();
+    bool is_valid();
 
-public:
-    HTTPHeader();
 
 private:
-    void update_GET_param_from_URI();
-    string GET_param2string();
-    enum {ClientReq, ServerResp} request_type;
+    enum {ClientReq, ServerResp, Invalid} request_type;
     header_t header;
-    HTTPMethods method;
+    HTTPMethods method=UNSET;
     string version_served;
     string status_string;
     string method_string;
     string uri; // for requested resource
     header_t GET_param;
+
+    void update_GET_param_from_URI();
+    string GET_param2string();
 };
 
 class HTTPRequest {
@@ -88,11 +90,20 @@ class HTTPRequest {
     void set_request_method(HTTPMethods meth);
     HTTPMethods get_request_method();
 
+    string get_request_location();
+    string set_request_location(string URI);
+
+    bool is_empty();
+
+    explicit operator bool();
+
     ~HTTPRequest();
 private:
     HTTPHeader header;
     header_t request_params;
-    HTTPMethods method;
+    HTTPMethods method=UNSET;
+    string body;
+    bool is_valid; // for passing into an HTTP Response
 };
 
 class HTTPResponse {
